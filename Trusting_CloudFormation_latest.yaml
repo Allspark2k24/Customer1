@@ -5,17 +5,17 @@ Parameters:
   InstanceId:
     Type: String
     Description: The ID of the Connect instance to monitor
-    Default: aa06da57-a6d3-4edc-b5c1-a89be51d5574
-  
+    Default: e55a89e5-1e8f-4696-8955-1688d28c7e36
+
   TopicName:
     Type: String
     Description: Name of the SNS topic
-    Default: Topic
+    Default: MySNSTopic
 
   SourceEmail:
     Type: String
     Description: The source email address for sending SES notifications
-    Default: kajendran.suyambulingam@cdw.com
+    Default: yeshwant.rajaraman@cdw.com
 
   SubscriberEmails:
     Type: CommaDelimitedList
@@ -109,90 +109,6 @@ Resources:
                                   ]
                               },
                               'Period': 60,  # Period in seconds (5 minutes)
-                              'Stat': 'Sum',  # Statistic to retrieve
-                              'Unit': 'Count'  # Unit of the metric
-                          },
-                          'ReturnData': True
-                      },
-                      {
-                          'Id': 'ConcurrentCalls',  # Unique identifier for this metric query
-                          'MetricStat': {
-                              'Metric': {
-                                  'Namespace': 'AWS/Connect',
-                                  'MetricName': 'ConcurrentCalls',
-                                  'Dimensions': [
-                                      {
-                                          'Name': 'InstanceId',
-                                          'Value': awsARN  # AWS Connect Instance ID for devinstance
-                                      },
-                                      {
-                                          "Name": "MetricGroup",
-                                          "Value": "ContactFlow"
-                                      },
-                                      {
-                                        "Name": "ContactFlowName",
-                                        "Value": contactFlowARN
-                                      }
-                                      
-                                  ]
-                              },
-                              'Period': 300,  # Period in seconds (5 minutes)
-                              'Stat': 'Sum',  # Statistic to retrieve
-                              'Unit': 'Count'  # Unit of the metric
-                          },
-                          'ReturnData': True
-                      },
-                      {
-                          'Id': 'LongestQueueWaitTime',  # Unique identifier for this metric query
-                          'MetricStat': {
-                              'Metric': {
-                                  'Namespace': 'AWS/Connect',
-                                  'MetricName': 'LongestQueueWaitTime',
-                                  'Dimensions': [
-                                      {
-                                          'Name': 'InstanceId',
-                                          'Value': awsARN  # AWS Connect Instance ID for devinstance
-                                      },
-                                      {
-                                          "Name": "MetricGroup",
-                                          "Value": "ContactFlow"
-                                      },
-                                      {
-                                        "Name": "ContactFlowName",
-                                        "Value": contactFlowARN
-                                      }
-                                      
-                                  ]
-                              },
-                              'Period': 300,  # Period in seconds (5 minutes)
-                              'Stat': 'Sum',  # Statistic to retrieve
-                              'Unit': 'Count'  # Unit of the metric
-                          },
-                          'ReturnData': True
-                      },
-                      {
-                          'Id': 'QueueCapacityExceededError',  # Unique identifier for this metric query
-                          'MetricStat': {
-                              'Metric': {
-                                  'Namespace': 'AWS/Connect',
-                                  'MetricName': 'QueueCapacityExceededError',
-                                  'Dimensions': [
-                                      {
-                                          'Name': 'InstanceId',
-                                          'Value': awsARN  # AWS Connect Instance ID for devinstance
-                                      },
-                                      {
-                                          "Name": "MetricGroup",
-                                          "Value": "ContactFlow"
-                                      },
-                                      {
-                                        "Name": "ContactFlowName",
-                                        "Value": contactFlowARN
-                                      }
-                                      
-                                  ]
-                              },
-                              'Period': 300,  # Period in seconds (5 minutes)
                               'Stat': 'Sum',  # Statistic to retrieve
                               'Unit': 'Count'  # Unit of the metric
                           },
@@ -591,7 +507,7 @@ Resources:
   MySNSSubscriptions:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub "https://sns-sub.s3.us-west-2.amazonaws.com/my-sns-subscriptions-template.yaml"
+      TemplateURL: !Sub "https://sns-subscriptions.s3.amazonaws.com/my-sns-subscriptions-template.yaml"
       Parameters:
         TopicArn: !Ref MySNSTopic
         SubscriberEmails: !Join [ ",", !Ref SubscriberEmails ]
@@ -908,62 +824,3 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       AlarmActions:
         - !Ref MySNSTopic
-
-  ConcurrentCalls:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: !Sub "${InstanceId}-ConcurrentCalls-Alarm"
-      Namespace: AWS/Connect
-      MetricName: ConcurrentCalls
-      Dimensions:
-        - Name: InstanceId
-          Value: !Ref InstanceId
-        - Name: MetricGroup
-          Value: VoiceCalls
-      Statistic: Sum
-      Period: 60
-      EvaluationPeriods: 1
-      Threshold: 1
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      AlarmActions:
-        - !Ref MySNSTopic
-
-  QueueCapacityExceededError:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: !Sub "${InstanceId}-QueueCapacityExceededError-Alarm"
-      Namespace: AWS/Connect
-      MetricName: QueueCapacityExceededError
-      Dimensions:
-        - Name: InstanceId
-          Value: !Ref InstanceId
-        - Name: MetricGroup
-          Value: VoiceCalls
-      Statistic: Sum
-      Period: 60
-      EvaluationPeriods: 1
-      Threshold: 1
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      AlarmActions:
-        - !Ref MySNSTopic
-
-  LongestQueueWaitTime:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: !Sub "${InstanceId}-LongestQueueWaitTime-Alarm"
-      Namespace: AWS/Connect
-      MetricName: LongestQueueWaitTime
-      Dimensions:
-        - Name: InstanceId
-          Value: !Ref InstanceId
-        - Name: MetricGroup
-          Value: VoiceCalls
-      Statistic: Sum
-      Period: 60
-      EvaluationPeriods: 1
-      Threshold: 1
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      AlarmActions:
-        - !Ref MySNSTopic
-
-  
